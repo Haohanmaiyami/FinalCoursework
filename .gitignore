@@ -21,3 +21,7 @@ staticfiles/
 htmlcov/
 .coverage
 flake_report.txt
+
+# macOS
+.DS_Store
+**/.DS_Store
