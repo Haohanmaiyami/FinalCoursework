@@ -125,3 +125,5 @@ CACHES = {
         "LOCATION": REDIS_URL,
     }
 }
+
+SWAGGER_USE_COMPAT_RENDERERS = False

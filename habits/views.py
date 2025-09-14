@@ -1,6 +1,6 @@
 from rest_framework import viewsets, generics
 from rest_framework.permissions import AllowAny
-
+from .pagination import FivePerPagePagination
 from .models import Habit
 from .serializers import HabitSerializer
 from .permissions import IsOwnerOrReadOnly
@@ -9,6 +9,7 @@ from .permissions import IsOwnerOrReadOnly
 class HabitViewSet(viewsets.ModelViewSet):
     serializer_class = HabitSerializer
     permission_classes = [IsOwnerOrReadOnly]
+    pagination_class = FivePerPagePagination
 
     def get_queryset(self):
         if getattr(self, "action", None) == "list":

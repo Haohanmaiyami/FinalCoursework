@@ -9,6 +9,16 @@ User = get_user_model()
 
 
 @pytest.fixture
+def user2(db):
+    return User.objects.create_user(username="u2", password="pass12345")
+
+
+@pytest.fixture
+def other_user(db):
+    return User.objects.create_user(username="oth", password="pass")
+
+
+@pytest.fixture
 def api():
     return APIClient()
 
@@ -142,30 +152,13 @@ def test_list_only_own_and_pagination(db, auth, user):
     assert len(r2.data["results"]) == 2
 
 
-def test_public_list_without_auth_and_without_pagination(db, api, user):
-    Habit.objects.create(
-        user=user,
-        place="p",
-        time=dt.time(9, 0),
-        action="a",
-        is_pleasant=False,
-        period=1,
-        length=60,
-        is_public=True,
-    )
-    r = api.get("/habit/public/")
-    assert r.status_code == 200
-    assert isinstance(r.data, list) and len(r.data) == 1
-
-
-def test_permissions_owner_only_update(db, user, api):
-    # создаём второго
-    # логинимся вторым
+def test_permissions_owner_only_update(db, user, api, user2):
     resp = api.post(
         reverse("login"), {"username": "u2", "password": "pass12345"}, format="json"
     )
+    assert resp.status_code == 200, resp.content
     api.credentials(HTTP_AUTHORIZATION=f"Bearer {resp.data['access']}")
-    # чужая привычка
+    # чужая привычка (принадлежит user, а не u2)
     h = Habit.objects.create(
         user=user,
         place="p",
@@ -181,12 +174,6 @@ def test_permissions_owner_only_update(db, user, api):
 
 # добавь в tests.py
 def test_permissions_read_public_and_owner_write(db, api):
-    from django.contrib.auth import get_user_model
-    from habits.models import Habit
-    from django.urls import reverse
-
-    User = get_user_model()
-
     owner = User.objects.create_user(username="own", password="pass")
 
     # публичную может читать аноним
@@ -207,6 +194,7 @@ def test_permissions_read_public_and_owner_write(db, api):
     resp = api.post(
         reverse("login"), {"username": "own", "password": "pass"}, format="json"
     )
+    assert resp.status_code == 200, resp.content
     api.credentials(HTTP_AUTHORIZATION=f"Bearer {resp.data['access']}")
     r = api.patch(f"/habit/{h_pub.id}/", {"action": "edit"}, format="json")
     assert r.status_code in (200, 204)
@@ -222,9 +210,37 @@ def test_permissions_read_public_and_owner_write(db, api):
         length=60,
         is_public=False,
     )
+
+    other = User.objects.create_user(username="oth", password="pass")
     resp2 = api.post(
         reverse("login"), {"username": "oth", "password": "pass"}, format="json"
     )
+    assert resp2.status_code == 200, resp2.content
     api.credentials(HTTP_AUTHORIZATION=f"Bearer {resp2.data['access']}")
     r = api.patch(f"/habit/{h_priv.id}/", {"action": "hack"}, format="json")
     assert r.status_code in (403, 404)
+
+
+def test_public_list_without_pagination(db, api):
+    owner = User.objects.create_user(username="own", password="pass")
+    # создаём 7 публичных привычек
+    for i in range(7):
+        Habit.objects.create(
+            user=owner,
+            place=f"p{i}",
+            time=dt.time(9, 0),
+            action=f"a{i}",
+            is_pleasant=False,
+            period=1,
+            length=60,
+            is_public=True,
+        )
+
+    resp = api.get("/habit/public/")
+    assert resp.status_code == 200
+    data = resp.json()
+    # т.к. без пагинации, ответ — список, а не {count/results/...}
+    assert isinstance(data, list)
+    assert len(data) == 7
+    # на всякий случай убеждаемся, что ключей пагинации нет
+    assert not isinstance(data, dict)
