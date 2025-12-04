@@ -1,3 +1,105 @@
+# 🇬🇧 Habit Tracker API (EN)
+
+> Final coursework project inspired by James Clear’s book *Atomic Habits*.  
+> Backend for a SPA application that helps users build and keep good habits with Telegram reminders.
+
+## 🔍 Project overview
+
+The service allows users to:
+
+- create and manage **useful** and **pleasant** habits;
+- configure **schedule and time** for each habit;
+- receive **Telegram notifications** via Celery;
+- share habits via a **public habits list**;
+- explore the API via **Swagger / ReDoc** documentation.
+
+The backend is built with **Django REST Framework**, uses **JWT authentication**, **Celery + Redis** for background jobs and **Telegram Bot API** for sending reminders.
+
+---
+
+## ✨ Key features
+
+- 👤 **User & auth**
+  - Custom user model with email as a login field.
+  - Registration: `POST /api/register/`
+  - JWT auth: `POST /api/token/`, `POST /api/token/refresh/`.
+
+- 📋 **Habits**
+  - Full CRUD via `HabitViewSet`:
+    - `GET /api/habit/` — list of current user’s habits (paginated, 5 per page);
+    - `POST /api/habit/` — create a habit;
+    - `GET /api/habit/{id}/` — retrieve a habit;
+    - `PUT/PATCH /api/habit/{id}/` — update;
+    - `DELETE /api/habit/{id}/` — delete.
+  - Public habits:
+    - `GET /api/habit/public/` — list of habits with `is_published=True` (read‑only).
+
+- ✅ **Business rules & validation**
+  - You **cannot** set both *reward* and *linked pleasant habit* at the same time.
+  - Execution time must be **≤ 120 seconds**.
+  - Only habits marked as pleasant can be used as *linked habits*.
+  - Pleasant habits cannot have reward or linked habit fields filled.
+  - Frequency must be **at least once every 7 days**.
+
+- 🔔 **Telegram notifications**
+  - Link Telegram account: `POST /api/tg/link/` (provide `chat_id`).
+  - A periodic Celery task scans habits and sends reminders at the appropriate time.
+  - Caching is used to avoid sending duplicate notifications.
+
+- 🌍 **Infrastructure**
+  - CORS configured for frontend integration.
+  - JWT protection for all private endpoints.
+  - Auto‑generated API docs:
+    - Swagger: `GET /api/swagger/`
+    - ReDoc: `GET /api/redoc/`
+
+---
+
+## 🧱 Tech stack
+
+- Python 3.13
+- Django 5
+- Django REST Framework
+- PostgreSQL
+- Redis
+- Celery + django‑celery‑beat
+- Simple JWT
+- drf‑yasg (Swagger / ReDoc)
+- django‑cors‑headers
+- pytest, pytest‑django, pytest‑asyncio
+- flake8, black, isort
+
+---
+
+## ⚙️ Setup
+
+```bash
+git clone <YOUR_REPO_URL>.git
+cd FinalCoursework
+poetry install
+cp .env.sample .env   # and fill in your values
+poetry run python manage.py migrate
+poetry run python manage.py createsuperuser
+poetry run python manage.py runserver
+poetry run celery -A config worker -l info
+poetry run celery -A config beat -l info
+```
+
+Run tests:
+
+```bash
+poetry run pytest
+```
+
+---
+
+## 💡 Notes
+
+- This project is a **training backend** and can be extended with a real frontend or mobile client.
+- The architecture, validation rules and async notifications are designed to demonstrate production‑like patterns in a compact educational project.
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 # 🧠 Habit Tracker API (Django + DRF + Celery)
 
 > Курсовой проект по книге Джеймса Клира «Атомные привычки».  
@@ -196,102 +298,3 @@ poetry run isort .
 
 ---
 
-# 🇬🇧 Habit Tracker API (EN)
-
-> Final coursework project inspired by James Clear’s book *Atomic Habits*.  
-> Backend for a SPA application that helps users build and keep good habits with Telegram reminders.
-
-## 🔍 Project overview
-
-The service allows users to:
-
-- create and manage **useful** and **pleasant** habits;
-- configure **schedule and time** for each habit;
-- receive **Telegram notifications** via Celery;
-- share habits via a **public habits list**;
-- explore the API via **Swagger / ReDoc** documentation.
-
-The backend is built with **Django REST Framework**, uses **JWT authentication**, **Celery + Redis** for background jobs and **Telegram Bot API** for sending reminders.
-
----
-
-## ✨ Key features
-
-- 👤 **User & auth**
-  - Custom user model with email as a login field.
-  - Registration: `POST /api/register/`
-  - JWT auth: `POST /api/token/`, `POST /api/token/refresh/`.
-
-- 📋 **Habits**
-  - Full CRUD via `HabitViewSet`:
-    - `GET /api/habit/` — list of current user’s habits (paginated, 5 per page);
-    - `POST /api/habit/` — create a habit;
-    - `GET /api/habit/{id}/` — retrieve a habit;
-    - `PUT/PATCH /api/habit/{id}/` — update;
-    - `DELETE /api/habit/{id}/` — delete.
-  - Public habits:
-    - `GET /api/habit/public/` — list of habits with `is_published=True` (read‑only).
-
-- ✅ **Business rules & validation**
-  - You **cannot** set both *reward* and *linked pleasant habit* at the same time.
-  - Execution time must be **≤ 120 seconds**.
-  - Only habits marked as pleasant can be used as *linked habits*.
-  - Pleasant habits cannot have reward or linked habit fields filled.
-  - Frequency must be **at least once every 7 days**.
-
-- 🔔 **Telegram notifications**
-  - Link Telegram account: `POST /api/tg/link/` (provide `chat_id`).
-  - A periodic Celery task scans habits and sends reminders at the appropriate time.
-  - Caching is used to avoid sending duplicate notifications.
-
-- 🌍 **Infrastructure**
-  - CORS configured for frontend integration.
-  - JWT protection for all private endpoints.
-  - Auto‑generated API docs:
-    - Swagger: `GET /api/swagger/`
-    - ReDoc: `GET /api/redoc/`
-
----
-
-## 🧱 Tech stack
-
-- Python 3.13
-- Django 5
-- Django REST Framework
-- PostgreSQL
-- Redis
-- Celery + django‑celery‑beat
-- Simple JWT
-- drf‑yasg (Swagger / ReDoc)
-- django‑cors‑headers
-- pytest, pytest‑django, pytest‑asyncio
-- flake8, black, isort
-
----
-
-## ⚙️ Setup
-
-```bash
-git clone <YOUR_REPO_URL>.git
-cd FinalCoursework
-poetry install
-cp .env.sample .env   # and fill in your values
-poetry run python manage.py migrate
-poetry run python manage.py createsuperuser
-poetry run python manage.py runserver
-poetry run celery -A config worker -l info
-poetry run celery -A config beat -l info
-```
-
-Run tests:
-
-```bash
-poetry run pytest
-```
-
----
-
-## 💡 Notes
-
-- This project is a **training backend** and can be extended with a real frontend or mobile client.
-- The architecture, validation rules and async notifications are designed to demonstrate production‑like patterns in a compact educational project.
