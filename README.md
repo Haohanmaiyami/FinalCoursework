@@ -1,4 +1,6 @@
-# 🇬🇧 Habit Tracker API (EN)
+# Habit Tracker API
+
+Backend API for a habit tracker inspired by Atomic Habits: users can create and manage useful and pleasant habits, configure schedule and frequency, receive Telegram reminders, and browse public habits shared by others. Built with Django REST Framework, JWT auth, Celery + Redis, custom validators and tests.
 
 > Final coursework project inspired by James Clear’s book *Atomic Habits*.  
 > Backend for a SPA application that helps users build and keep good habits with Telegram reminders.
@@ -107,7 +109,9 @@ poetry run pytest
 
 ---
 
-## 🇷🇺 Описание проекта
+## Описание проекта
+
+Это backend-сервис трекера привычек по «Атомным привычкам»: пользователи создают полезные и приятные привычки, настраивают периодичность и время, получают напоминания в Telegram, а также могут смотреть публичные привычки других пользователей. Всё сделано на Django REST Framework, с валидаторами бизнес-логики, JWT, Celery+Redis и тестами.
 
 Этот сервис позволяет пользователям:
 
