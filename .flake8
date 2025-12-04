@@ -1,0 +1,18 @@
+[flake8]
+max-line-length = 100
+exclude =
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    */migrations/*
+
+# Проверяем стандартные группы правил (E, W, F) + некоторые из flake8-bugbear (B/B950).
+# Если у тебя не установлен flake8-bugbear — просто убери B и B950 из select.
+select = E,W,F,B,B950
+
+# Небольшие совместимости с black/pep8
+ignore =
+    E203,
+    W503
+

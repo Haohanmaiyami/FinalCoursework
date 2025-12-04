@@ -1,0 +1,27 @@
+# IDE & venv
+.idea/
+.venv/
+env/
+venv/
+
+# Python
+__pycache__/
+*.pyc
+
+# Django
+*.sqlite3
+db.sqlite3
+/media/
+staticfiles/
+
+# Env
+.env
+
+# Reports
+htmlcov/
+.coverage
+flake_report.txt
+
+# macOS
+.DS_Store
+**/.DS_Store
