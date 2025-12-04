@@ -1,50 +1,297 @@
-# Habit Tracker (DRF + PostgreSQL)
+# 🧠 Habit Tracker API (Django + DRF + Celery)
 
-Бэкенд для SPA-трекера полезных привычек по книге «Атомные привычки».
+> Курсовой проект по книге Джеймса Клира «Атомные привычки».  
+> Бэкенд для SPA‑приложения по отслеживанию полезных привычек и напоминаниям в Telegram.
 
+---
 
-JWT, CRUD привычек (личные + публичные), пагинация (5 у личных), CORS, .env, Celery + Telegram, Swagger/Redoc.
+## 🇷🇺 Описание проекта
 
-/habit/ - пагинируется по 5 /habit/public/ без пагинации как на диаграмме
+Этот сервис позволяет пользователям:
 
+- создавать и редактировать **полезные и приятные привычки**;
+- настраивать **периодичность** и время выполнения;
+- получать **напоминания в Telegram** через Celery;
+- делиться привычками с другими через **публичный список**;
+- работать с API через Swagger / ReDoc документацию.
 
-{ "username": "testuser", "email": "test@example.com", "password": "Qwerty123!" }
+Проект реализован на **Django REST Framework** с использованием **JWT‑аутентификации**, **Celery + Redis** для фоновых задач и **Telegram Bot API** для рассылки уведомлений.
 
-http://127.0.0.1:8000/habit/
+---
 
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU3NjY0NzczLCJpYXQiOjE3NTc2NTM5NzMsImp0aSI6Ijk4MGRjODZiM2RlODQ5NjhiZDEwNjA3YzRiMGQwMTE3IiwidXNlcl9pZCI6IjMifQ.lID_4D-nRFvYKVtxaRI3zm6ZAZ3lagO2fe5Z4Ech4Js
+## ✨ Основной функционал
 
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU3ODE0MDgyLCJpYXQiOjE3NTc4MDMyODIsImp0aSI6ImYxNzFiNzU3ODQwODRhZDk5ZWI3Yjg4MDcyYzY4NTBlIiwidXNlcl9pZCI6IjIifQ.Je5vFxc3-trwJw6O-1GR6ucOoYQTPD7-kBfRpkqua_8
+- 👤 **Пользователь и авторизация**
+  - Кастомная модель пользователя (email как логин).
+  - Регистрация: `POST /api/register/`
+  - JWT‑аутентификация: `POST /api/token/`, `POST /api/token/refresh/`.
 
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU3ODM5ODg4LCJpYXQiOjE3NTc4MjkwODgsImp0aSI6Ijc5ZDZhMmEwMTAzNjQ2YjFhNjk5ZWQ5NGZiNmE0M2VlIiwidXNlcl9pZCI6IjIifQ.8CTpqNAVJ-fL8U-janGk_nY-z_PtNMeHF_0TT-vRTF8
+- 📋 **Привычки**
+  - CRUD для привычек через `HabitViewSet`:
+    - `GET /api/habit/` — список привычек текущего пользователя (с пагинацией по 5 штук).
+    - `POST /api/habit/` — создание привычки.
+    - `GET /api/habit/{id}/` — просмотр привычки.
+    - `PUT/PATCH /api/habit/{id}/` — обновление.
+    - `DELETE /api/habit/{id}/` — удаление.
+  - Публичные привычки:
+    - `GET /api/habit/public/` — просмотр привычек с флагом `is_published=True` (только чтение).
 
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU4MDc1ODU1LCJpYXQiOjE3NTgwNjUwNTUsImp0aSI6IjczZmRiOWFkMzI1NDRkNmQ4OWNhMmZhMjA1YzE1ODc5IiwidXNlcl9pZCI6IjIifQ.QL3W8eMV4Mcd2JaBgTYXCrKMK-jIh_J5104AqwXoHDc
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU4MDc2MDIxLCJpYXQiOjE3NTgwNjUyMjEsImp0aSI6ImE4YjMxNGM4ZTI2YzRlZDg5NzRiNmY0Nzk0MDY4YTY3IiwidXNlcl9pZCI6IjIifQ.2gGq3WlbnCNFNFmkbgJGPn7BGm8EGVU_bbLzpOjcOc4
+- ✅ **Бизнес‑правила и валидаторы**
+  - Нельзя одновременно указать **вознаграждение** и **связанную приятную привычку**.
+  - Время выполнения **не более 120 секунд**.
+  - В связанные привычки можно выбирать **только приятные привычки**.
+  - У приятной привычки не может быть ни вознаграждения, ни связанной привычки.
+  - Периодичность — **не реже 1 раза в 7 дней**.
 
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU4MDc2ODgzLCJpYXQiOjE3NTgwNjYwODMsImp0aSI6ImIxZTE3M2UyYzUxNTRhN2RiNGZhOTIzMjE5NjAxYWNkIiwidXNlcl9pZCI6IjIifQ.zTutxj4SLEj5g-IZokPz79U9y0_sMqY1VS3kCGHymzA
+- 🔔 **Напоминания в Telegram**
+  - Привязка Telegram‑аккаунта: `POST /api/tg/link/` (передаём `chat_id`).
+  - Периодическая задача Celery проходит по привычкам и отправляет сообщения пользователям в нужное время.
+  - Чтобы не спамить, используется кэширование — повторные напоминания за один и тот же период не отправляются.
 
+- 🌍 **Инфраструктура**
+  - CORS‑настройки для работы с фронтендом.
+  - JWT‑защита всех приватных эндпоинтов.
+  - Автогенерируемая документация:
+    - Swagger: `GET /api/swagger/`
+    - ReDoc: `GET /api/redoc/`
 
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU4MDc2MzE1LCJpYXQiOjE3NTgwNjU1MTUsImp0aSI6IjMwYjhhMmRjYzBlZjQxNmJhZmNjZGViM2EzMmM5ODA5IiwidXNlcl9pZCI6IjIifQ.T9wfHswum4vdjJWWgvBBv3WbBX7uW-rLEK7SbFkGcOA
+---
 
+## 🧱 Технологический стек
 
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU4MDc2ODgzLCJpYXQiOjE3NTgwNjYwODMsImp0aSI6ImIxZTE3M2UyYzUxNTRhN2RiNGZhOTIzMjE5NjAxYWNkIiwidXNlcl9pZCI6IjIifQ.zTutxj4SLEj5g-IZokPz79U9y0_sMqY1VS3kCGHymzA
+- Python 3.13
+- Django 5
+- Django REST Framework
+- PostgreSQL
+- Redis
+- Celery + django‑celery‑beat
+- Simple JWT
+- drf‑yasg (Swagger / ReDoc)
+- django‑cors‑headers
+- pytest, pytest‑django, pytest‑asyncio
+- flake8, black, isort
 
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU4MDc3MTA2LCJpYXQiOjE3NTgwNjYzMDYsImp0aSI6IjQ0NWNkZGMzZjA5MTRlNThhZDY1NzNkNTNkMWQwNGQ1IiwidXNlcl9pZCI6IjIifQ.2D4sCal6nw4v_PR4lJ3N9YrgbOp6ULbVgjvnzI83vnI
+---
 
-done
+## 🗂 Структура проекта
 
+```text
+FinalCoursework/
+├─ config/           # Настройки Django, Celery, URLs
+├─ habits/           # Модели привычек, сериализаторы, вьюхи, права, пагинация
+├─ users/            # Кастомный пользователь, регистрация, JWT‑логика
+├─ tg/               # Сервисы и задачи для Telegram‑уведомлений
+├─ tests/            # Тесты для привычек и пользователей
+├─ pyproject.toml    # Зависимости проекта (Poetry)
+└─ .env.sample       # Пример настроек окружения
+```
 
+---
 
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU4MDY5NDUwLCJpYXQiOjE3NTgwNTg2NTAsImp0aSI6ImY1YzI3NzhkODdlZDRkYjg4NTJjYmY3NTJiYjZkYTNlIiwidXNlcl9pZCI6IjIifQ.Nz1gJR8-SsE64ffYdUOohsS47kq3B7IcNqOfSpdwMS4
+## ⚙️ Настройка и запуск
 
-{ "username": "test", "email": "test@example.com", "password": "test123" }
+### 1. Клонирование репозитория
 
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU4MDc1NzU2LCJpYXQiOjE3NTgwNjQ5NTYsImp0aSI6IjY3MGY3YzEwZTgyYTQ2NTY5OWQzYThiYTAwMmRhODFkIiwidXNlcl9pZCI6IjgifQ.Q7Ye9-FGynjqx7hePlUs97xDUSaUm3RMZWfOKnrH1uA
+```bash
+git clone <YOUR_REPO_URL>.git
+cd FinalCoursework
+```
 
+### 2. Установка зависимостей
 
-{ "username": "other", "email": "o@o.com", "password": "Qwerty123!" }
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU4MDc3NTc5LCJpYXQiOjE3NTgwNjY3NzksImp0aSI6IjFkYjVlYjE1MjJlMjQzYjg5MTM5OTJkN2JhYzE4ZmJiIiwidXNlcl9pZCI6IjkifQ.aPgvLQHe3kGcXeSK8xUzCrmY83ffRdQX0pVAkxDM5Hk
+Проект использует **Poetry**:
 
-done
+```bash
+poetry install
+```
 
-test
+### 3. Настройка окружения
+
+Создайте файл `.env` рядом с `manage.py` на основе `.env.sample`:
+
+```env
+SECRET_KEY=...
+DEBUG=True
+ALLOWED_HOSTS=127.0.0.1,localhost
+
+DATABASE_NAME=habits_db
+DATABASE_USER=postgres
+DATABASE_PASSWORD=postgres
+DATABASE_HOST=localhost
+DATABASE_PORT=5432
+
+REDIS_URL=redis://127.0.0.1:6379/0
+
+TELEGRAM_BOT_TOKEN=123456789:xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+CORS_ALLOW_ALL=True
+```
+
+### 4. Миграции и суперпользователь
+
+```bash
+poetry run python manage.py migrate
+poetry run python manage.py createsuperuser
+```
+
+### 5. Запуск приложения
+
+```bash
+# Django
+poetry run python manage.py runserver
+
+# Celery worker
+poetry run celery -A config worker -l info
+
+# Celery beat (периодические задачи)
+poetry run celery -A config beat -l info
+```
+
+---
+
+## 🤖 Интеграция с Telegram
+
+1. Создайте бота через **@BotFather** и получите токен.
+2. Укажите токен в переменной окружения `TELEGRAM_BOT_TOKEN`.
+3. В Telegram отправьте вашему боту любое сообщение и получите `chat_id`
+   (через логирование или вспомогательный метод в проекте).
+4. Вызовите эндпоинт:
+
+```http
+POST /api/tg/link/
+Authorization: Bearer <JWT>
+Content-Type: application/json
+
+{
+  "chat_id": "123456789"
+}
+```
+
+После этого Celery‑таски начнут отправлять напоминания о привычках в личные сообщения.
+
+---
+
+## 🧪 Тесты и качество кода
+
+- Тесты запускаются командой:
+
+```bash
+poetry run pytest
+```
+
+- Покрытие тестами ≥ 80% (модели, сериализаторы, вьюхи, валидаторы).
+- Статический анализ и стиль:
+
+```bash
+poetry run flake8
+poetry run black .
+poetry run isort .
+```
+
+---
+
+## 👨‍💻 Автор
+
+**Ayan Kharitonov (Haohanmaiyami)**  
+Учебный проект в рамках программы Skypro (Python‑разработчик).
+
+---
+
+# 🇬🇧 Habit Tracker API (EN)
+
+> Final coursework project inspired by James Clear’s book *Atomic Habits*.  
+> Backend for a SPA application that helps users build and keep good habits with Telegram reminders.
+
+## 🔍 Project overview
+
+The service allows users to:
+
+- create and manage **useful** and **pleasant** habits;
+- configure **schedule and time** for each habit;
+- receive **Telegram notifications** via Celery;
+- share habits via a **public habits list**;
+- explore the API via **Swagger / ReDoc** documentation.
+
+The backend is built with **Django REST Framework**, uses **JWT authentication**, **Celery + Redis** for background jobs and **Telegram Bot API** for sending reminders.
+
+---
+
+## ✨ Key features
+
+- 👤 **User & auth**
+  - Custom user model with email as a login field.
+  - Registration: `POST /api/register/`
+  - JWT auth: `POST /api/token/`, `POST /api/token/refresh/`.
+
+- 📋 **Habits**
+  - Full CRUD via `HabitViewSet`:
+    - `GET /api/habit/` — list of current user’s habits (paginated, 5 per page);
+    - `POST /api/habit/` — create a habit;
+    - `GET /api/habit/{id}/` — retrieve a habit;
+    - `PUT/PATCH /api/habit/{id}/` — update;
+    - `DELETE /api/habit/{id}/` — delete.
+  - Public habits:
+    - `GET /api/habit/public/` — list of habits with `is_published=True` (read‑only).
+
+- ✅ **Business rules & validation**
+  - You **cannot** set both *reward* and *linked pleasant habit* at the same time.
+  - Execution time must be **≤ 120 seconds**.
+  - Only habits marked as pleasant can be used as *linked habits*.
+  - Pleasant habits cannot have reward or linked habit fields filled.
+  - Frequency must be **at least once every 7 days**.
+
+- 🔔 **Telegram notifications**
+  - Link Telegram account: `POST /api/tg/link/` (provide `chat_id`).
+  - A periodic Celery task scans habits and sends reminders at the appropriate time.
+  - Caching is used to avoid sending duplicate notifications.
+
+- 🌍 **Infrastructure**
+  - CORS configured for frontend integration.
+  - JWT protection for all private endpoints.
+  - Auto‑generated API docs:
+    - Swagger: `GET /api/swagger/`
+    - ReDoc: `GET /api/redoc/`
+
+---
+
+## 🧱 Tech stack
+
+- Python 3.13
+- Django 5
+- Django REST Framework
+- PostgreSQL
+- Redis
+- Celery + django‑celery‑beat
+- Simple JWT
+- drf‑yasg (Swagger / ReDoc)
+- django‑cors‑headers
+- pytest, pytest‑django, pytest‑asyncio
+- flake8, black, isort
+
+---
+
+## ⚙️ Setup
+
+```bash
+git clone <YOUR_REPO_URL>.git
+cd FinalCoursework
+poetry install
+cp .env.sample .env   # and fill in your values
+poetry run python manage.py migrate
+poetry run python manage.py createsuperuser
+poetry run python manage.py runserver
+poetry run celery -A config worker -l info
+poetry run celery -A config beat -l info
+```
+
+Run tests:
+
+```bash
+poetry run pytest
+```
+
+---
+
+## 💡 Notes
+
+- This project is a **training backend** and can be extended with a real frontend or mobile client.
+- The architecture, validation rules and async notifications are designed to demonstrate production‑like patterns in a compact educational project.
